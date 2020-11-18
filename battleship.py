@@ -1,8 +1,9 @@
 import pygame
 from random import randint
+import pygame_menu
 
-WIDTH = 1450
-HEIGHT = 870
+WIDTH = 920
+HEIGHT = 500
 COLORS = {
     "BGR": (160, 196, 227),
     "SHIP": (35, 59, 55),
@@ -19,46 +20,62 @@ screen.fill(COLORS["BGR"])
 FPS = 30
 
 
+#menu options
+def start_game_options():
+    pass
+
+def main_menu():
+    menu = pygame_menu.Menu(500, 920, "Main menu", theme = pygame_menu.themes.THEME_BLUE)
+
+    menu.add_selector("Mode:", [("Human vs Human", 1), ("Human vs AI", 2), ("AI vs AI", 3)])
+    menu.add_button("Start", start_game_options)
+    menu.add_button("Quit", pygame_menu.events.EXIT)
+    menu.mainloop(screen)
+
+main_menu()
+
+
+
 def player_one_box(screen, board_size):
-    board_border = 3
-    x = 55 + board_border // 2
-    y = 55 + board_border // 2
-    divide = 65
+    rows = 11
+    side_length = 40
+    x = side_length
+    y = side_length
 
-    for i in range(board_size-1):
-        x += divide
-        y += divide
-        pygame.draw.line(screen, (0, 0, 0), (x, 55), (x, 705))
-        pygame.draw.line(screen, (0, 0, 0), (55, y), (705, y))
+    for i in range(rows - 1):
+        x += side_length
+        y += side_length
+        pygame.draw.line(screen, (0, 0, 0), (x, side_length), (x, side_length * rows))
+        pygame.draw.line(screen, (0, 0, 0), (side_length, y), (side_length * rows, y))
 
-    pygame.draw.line(screen, (0, 0, 0), (55, 55), (55, 707), board_border)
-    pygame.draw.line(screen, (0, 0, 0), (55, 55), (707, 55), board_border)
-    pygame.draw.line(screen, (0, 0, 0), (55, 707), (707, 707), board_border)
-    pygame.draw.line(screen, (0, 0, 0), (707, 55), (707, 707), board_border)
+    pygame.draw.line(screen, (0, 0, 0), (side_length, side_length), (side_length, side_length * rows), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length, side_length), (side_length * rows, side_length), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length, side_length * rows), (side_length * rows, side_length * rows), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length * rows, side_length), (side_length * rows, side_length * rows), 3)
 
-    draw_numbers(87.5, screen)
-    draw_string(87.5, screen)
+    draw_numbers(60, screen)
+    draw_string(50, screen)
     pygame.display.update()
 
 
 def player_two_box(screen, board_size):
-    board_border = 3
-    x = 730 + board_border // 2
-    y = 55 + board_border // 2
-    gap = 65
+    rows = 11
+    side_length = 40
+    x = side_length + 400
+    y = side_length
 
-    for i in range(board_size-1):
-        x += gap
-        y += gap
-        pygame.draw.line(screen, (0, 0, 0), (x, 55), (x, 705))
-        pygame.draw.line(screen, (0, 0, 0), (730, y), (1380, y))
+    for i in range(rows - 1):
+        x += side_length
+        y += side_length
+        pygame.draw.line(screen, (0, 0, 0), (x, side_length), (x, side_length * rows))
+        pygame.draw.line(screen, (0, 0, 0), (side_length * 12, y), (side_length * 22, y))
 
-    pygame.draw.line(screen, (0, 0, 0), (730, 55), (730, 707), board_border)
-    pygame.draw.line(screen, (0, 0, 0), (730, 55), (1382, 55), board_border)
-    pygame.draw.line(screen, (0, 0, 0), (730, 707), (1382, 707), board_border)
-    pygame.draw.line(screen, (0, 0, 0), (1382, 55), (1382, 707), board_border)
+    pygame.draw.line(screen, (0, 0, 0), (side_length * 12, side_length), (side_length * 12, side_length * 11), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length * 12, side_length), (side_length * 22, side_length), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length * 12, side_length * 11), (side_length * 22, side_length * 11), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length * 22, side_length), (side_length * 22, side_length * 11), 3)
 
-    draw_numbers(765, screen)
+    draw_numbers(side_length * 12.5, screen)
     pygame.display.update()
 
 
@@ -67,7 +84,7 @@ def draw_numbers(pos, screen):
         font = pygame.font.SysFont("Arial", 25)
         text = font.render(str(n), 1, (0, 0, 0))
         screen.blit(text, (pos - (text.get_width()/2), 5))
-        pos += 65
+        pos += 40
 
 
 def draw_string(pos, screen):
@@ -75,7 +92,7 @@ def draw_string(pos, screen):
         font = pygame.font.SysFont("Arial", 25)
         text = font.render(ch, 1, (0, 0, 0))
         screen.blit(text, (5, pos - (text.get_width()/2)))
-        pos += 65
+        pos += 40
 
 
 def get_move():
@@ -89,14 +106,14 @@ def get_move():
                 run = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
-                if pos[0] >= 731 and pos[0] < 1381 and pos[1] >= 56 and pos[1] < 706:
+                if pos[0] >= 481 and pos[0] < 881 and pos[1] >= 41 and pos[1] < 441:
                     return get_coords(pos)
 
 
 def draw_ship(coords, sign, side):
-    gap = 65
-    board_x = 57 if side == "L" else 732
-    board_y = 57
+    gap = 40
+    board_x = 41 if side == "L" else 481
+    board_y = 41
 
     color = COLORS["SHIP"]
     if sign == "M":
@@ -128,6 +145,7 @@ def place_the_ships(board):
             board[coords[0]][coords[1]] = "X"
 
     return player_ships
+
 
 
 def get_avaliable_fields(board_size, free_fields, ship):
@@ -187,8 +205,8 @@ def draw_board(board, side):
 
 
 def get_coords(move):
-    row = (move[1] - 56) // 65
-    col = (move[0] - 731) // 65
+    row = (move[1] - 41) // 40
+    col = (move[0] - 481) // 40
     return (row, col)
 
 
@@ -269,14 +287,14 @@ def redraw_screen(boards, board_size, player):
     draw_board(boards[opponent-1], "R")
 
     player_text = "One" if player == 1 else "Two"
-    font = pygame.font.SysFont("Arial", 100)
+    font = pygame.font.SysFont("Arial", 50)
     text = font.render(f"Player {player_text}", 5, (0, 0, 0))
-    screen.blit(text, (380-text.get_width() / 2, 730))
+    screen.blit(text, (240-text.get_width() / 2, 440))
 
     opponent_text = "One" if opponent == 1 else "Two"
-    font = pygame.font.SysFont("Arial", 100)
+    font = pygame.font.SysFont("Arial", 50)
     text = font.render(f"Player {opponent_text}", 5, (0, 0, 0))
-    screen.blit(text, (1050-text.get_width() / 2, 730))
+    screen.blit(text, (680-text.get_width() / 2, 440))
 
     pygame.display.update()
 
