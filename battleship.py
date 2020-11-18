@@ -1,6 +1,7 @@
 import pygame
-from random import randint
 import pygame_menu
+import sys
+from random import randint
 
 WIDTH = 920
 HEIGHT = 500
@@ -18,29 +19,31 @@ pygame.display.set_caption("Cool Battleships")
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 screen.fill(COLORS["BGR"])
 FPS = 30
+game_mode = "HUMAN-HUMAN"
 
 
-#menu options
-def start_game_options():
-    pass
+def set_mode(mode, value):
+    global game_mode
+    if value == 1:
+        game_mode = "HUMAN-HUMAN"
+    elif value == 2:
+        game_mode = "HUMAN-COMPUTER"
+
 
 def main_menu():
-    menu = pygame_menu.Menu(500, 920, "Main menu", theme = pygame_menu.themes.THEME_BLUE)
+    menu = pygame_menu.Menu(500, 920, "Main menu", theme=pygame_menu.themes.THEME_BLUE)
 
-    menu.add_selector("Mode:", [("Human vs Human", 1), ("Human vs AI", 2), ("AI vs AI", 3)])
-    menu.add_button("Start", start_game_options)
+    menu.add_selector("Mode:", [("Human vs Human", 1), ("Human vs AI", 2)], onchange=set_mode)
+    menu.add_button("Start", battleship_game)
     menu.add_button("Quit", pygame_menu.events.EXIT)
     menu.mainloop(screen)
-
-main_menu()
-
 
 
 def player_one_box(screen, board_size):
     rows = 11
     side_length = 40
-    x = side_length
-    y = side_length
+    x = side_length + 1
+    y = side_length + 1
 
     for i in range(rows - 1):
         x += side_length
@@ -48,10 +51,10 @@ def player_one_box(screen, board_size):
         pygame.draw.line(screen, (0, 0, 0), (x, side_length), (x, side_length * rows))
         pygame.draw.line(screen, (0, 0, 0), (side_length, y), (side_length * rows, y))
 
-    pygame.draw.line(screen, (0, 0, 0), (side_length, side_length), (side_length, side_length * rows), 3)
-    pygame.draw.line(screen, (0, 0, 0), (side_length, side_length), (side_length * rows, side_length), 3)
-    pygame.draw.line(screen, (0, 0, 0), (side_length, side_length * rows), (side_length * rows, side_length * rows), 3)
-    pygame.draw.line(screen, (0, 0, 0), (side_length * rows, side_length), (side_length * rows, side_length * rows), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length, side_length), (side_length, side_length * rows + 2), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length, side_length), (side_length * rows + 2, side_length), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length, side_length * rows + 2), (side_length * rows + 2, side_length * rows + 2), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length * rows + 2, side_length), (side_length * rows + 2, side_length * rows + 2), 3)
 
     draw_numbers(60, screen)
     draw_string(50, screen)
@@ -61,8 +64,8 @@ def player_one_box(screen, board_size):
 def player_two_box(screen, board_size):
     rows = 11
     side_length = 40
-    x = side_length + 400
-    y = side_length
+    x = side_length + 400 + 1
+    y = side_length + 1
 
     for i in range(rows - 1):
         x += side_length
@@ -70,10 +73,10 @@ def player_two_box(screen, board_size):
         pygame.draw.line(screen, (0, 0, 0), (x, side_length), (x, side_length * rows))
         pygame.draw.line(screen, (0, 0, 0), (side_length * 12, y), (side_length * 22, y))
 
-    pygame.draw.line(screen, (0, 0, 0), (side_length * 12, side_length), (side_length * 12, side_length * 11), 3)
-    pygame.draw.line(screen, (0, 0, 0), (side_length * 12, side_length), (side_length * 22, side_length), 3)
-    pygame.draw.line(screen, (0, 0, 0), (side_length * 12, side_length * 11), (side_length * 22, side_length * 11), 3)
-    pygame.draw.line(screen, (0, 0, 0), (side_length * 22, side_length), (side_length * 22, side_length * 11), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length * 12, side_length), (side_length * 12, side_length * 11 + 2), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length * 12, side_length), (side_length * 22 + 2, side_length), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length * 12, side_length * 11 + 2), (side_length * 22 + 2, side_length * 11 + 2), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length * 22 + 2, side_length), (side_length * 22 + 2, side_length * 11 + 2), 3)
 
     draw_numbers(side_length * 12.5, screen)
     pygame.display.update()
@@ -103,7 +106,8 @@ def get_move():
         clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run = False
+                pygame.quit()
+                sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
                 if pos[0] >= 481 and pos[0] < 881 and pos[1] >= 41 and pos[1] < 441:
@@ -112,8 +116,8 @@ def get_move():
 
 def draw_ship(coords, sign, side):
     gap = 40
-    board_x = 41 if side == "L" else 481
-    board_y = 41
+    board_x = 42 if side == "L" else 482
+    board_y = 42
 
     color = COLORS["SHIP"]
     if sign == "M":
@@ -145,7 +149,6 @@ def place_the_ships(board):
             board[coords[0]][coords[1]] = "X"
 
     return player_ships
-
 
 
 def get_avaliable_fields(board_size, free_fields, ship):
@@ -286,16 +289,6 @@ def redraw_screen(boards, board_size, player):
     draw_board(boards[player-1], "L")
     draw_board(boards[opponent-1], "R")
 
-    player_text = "One" if player == 1 else "Two"
-    font = pygame.font.SysFont("Arial", 50)
-    text = font.render(f"Player {player_text}", 5, (0, 0, 0))
-    screen.blit(text, (240-text.get_width() / 2, 440))
-
-    opponent_text = "One" if opponent == 1 else "Two"
-    font = pygame.font.SysFont("Arial", 50)
-    text = font.render(f"Player {opponent_text}", 5, (0, 0, 0))
-    screen.blit(text, (680-text.get_width() / 2, 440))
-
     pygame.display.update()
 
 
@@ -320,6 +313,19 @@ def human_human_mode(boards, board_size):
         current_time = pygame.time.get_ticks()
         if current_time >= end_time:
             redraw_screen(boards, board_size, player)
+
+            player_text = "One" if player == 1 else "Two"
+            font = pygame.font.SysFont("Arial", 50)
+            text = font.render(f"Player {player_text}", 5, (0, 0, 0))
+            screen.blit(text, (240-text.get_width() / 2, 440))
+
+            opponent_text = "One" if opponent == 1 else "Two"
+            font = pygame.font.SysFont("Arial", 50)
+            text = font.render(f"Player {opponent_text}", 5, (0, 0, 0))
+            screen.blit(text, (680-text.get_width() / 2, 440))
+
+            pygame.display.update()
+
             valid_move = False
             while not valid_move:
                 move = get_move()
@@ -394,6 +400,15 @@ def human_computer_mode(boards, board_size):
 
     redraw_screen(boards, board_size, player)
 
+    font = pygame.font.SysFont("Arial", 50)
+    text = font.render("Player", 5, (0, 0, 0))
+    screen.blit(text, (240-text.get_width() / 2, 440))
+
+    font = pygame.font.SysFont("Arial", 50)
+    text = font.render("Computer", 5, (0, 0, 0))
+    screen.blit(text, (680-text.get_width() / 2, 440))
+    pygame.display.update()
+
     while run:
         clock.tick(FPS)
 
@@ -441,7 +456,8 @@ def init_board(size):
     return board
 
 
-def battleship_game(mode="HUMAN-HUMAN", board_size=10):
+def battleship_game(board_size=10):
+    print(f"{game_mode} mode running")
     boards = [None, None]
     boards[0] = init_board(board_size)
     boards[1] = init_board(board_size)
@@ -449,14 +465,14 @@ def battleship_game(mode="HUMAN-HUMAN", board_size=10):
     player_one_box(screen, board_size)
     player_two_box(screen, board_size)
 
-    if mode == "HUMAN-HUMAN":
+    if game_mode == "HUMAN-HUMAN":
         human_human_mode(boards, board_size)
-    elif mode == "HUMAN-COMPUTER":
+    elif game_mode == "HUMAN-COMPUTER":
         human_computer_mode(boards, board_size)
 
 
 def main():
-    battleship_game("HUMAN-COMPUTER")
+    main_menu()
 
 
 if __name__ == '__main__':
