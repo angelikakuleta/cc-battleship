@@ -1,4 +1,5 @@
 import pygame
+from random import randint
 
 WIDTH = 1450
 HEIGHT = 870
@@ -30,10 +31,10 @@ def player_one_box(screen, board_size):
         pygame.draw.line(screen, (0, 0, 0), (x, 55), (x, 705))
         pygame.draw.line(screen, (0, 0, 0), (55, y), (705, y))
 
-    pygame.draw.line(screen, (0, 0, 0), (55, 55), (55, 705), board_border)
-    pygame.draw.line(screen, (0, 0, 0), (55, 55), (705, 55), board_border)
-    pygame.draw.line(screen, (0, 0, 0), (55, 705), (705, 705), board_border)
-    pygame.draw.line(screen, (0, 0, 0), (705, 55), (705, 705), board_border)
+    pygame.draw.line(screen, (0, 0, 0), (55, 55), (55, 707), board_border)
+    pygame.draw.line(screen, (0, 0, 0), (55, 55), (707, 55), board_border)
+    pygame.draw.line(screen, (0, 0, 0), (55, 707), (707, 707), board_border)
+    pygame.draw.line(screen, (0, 0, 0), (707, 55), (707, 707), board_border)
 
     draw_numbers(87.5, screen)
     draw_string(87.5, screen)
@@ -52,10 +53,10 @@ def player_two_box(screen, board_size):
         pygame.draw.line(screen, (0, 0, 0), (x, 55), (x, 705))
         pygame.draw.line(screen, (0, 0, 0), (730, y), (1380, y))
 
-    pygame.draw.line(screen, (0, 0, 0), (730, 55), (730, 705), board_border)
-    pygame.draw.line(screen, (0, 0, 0), (730, 55), (1380, 55), board_border)
-    pygame.draw.line(screen, (0, 0, 0), (730, 705), (1380, 705), board_border)
-    pygame.draw.line(screen, (0, 0, 0), (1380, 55), (1380, 705), board_border)
+    pygame.draw.line(screen, (0, 0, 0), (730, 55), (730, 707), board_border)
+    pygame.draw.line(screen, (0, 0, 0), (730, 55), (1382, 55), board_border)
+    pygame.draw.line(screen, (0, 0, 0), (730, 707), (1382, 707), board_border)
+    pygame.draw.line(screen, (0, 0, 0), (1382, 55), (1382, 707), board_border)
 
     draw_numbers(765, screen)
     pygame.display.update()
@@ -89,7 +90,7 @@ def get_move():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
                 if pos[0] >= 731 and pos[0] < 1381 and pos[1] >= 56 and pos[1] < 706:
-                    return pos
+                    return get_coords(pos)
 
 
 def draw_ship(coords, sign, side):
@@ -106,26 +107,76 @@ def draw_ship(coords, sign, side):
         color = COLORS["SINK"]
 
     if not (side == "R" and sign == "X"):
-        field_x = board_x + gap * coords[0]
-        field_y = board_y + gap * coords[1]
+        field_x = board_x + gap * coords[1]
+        field_y = board_y + gap * coords[0]
         pygame.draw.rect(screen, color, (field_x, field_y, gap-1, gap-1))
         pygame.display.update()
 
 
 def place_the_ships(board):
     # TODO: Ask player about ship positioning with validation
-    player_ships = []
-    player_ships.append([(1, 0), (1, 1)])
-    player_ships.append([(3, 1), (4, 1)])
-    player_ships.append([(0, 4)])
-    player_ships.append([(2, 3)])
-    player_ships.append([(4, 4)])
+    player_ships = [
+        [(3, 2), (4, 2), (4, 3), (5, 2), (6, 2)],
+        [(6, 8), (6, 7), (7, 8), (6, 9)],
+        [(9, 2), (9, 1), (9, 0), (9, 3)],
+        [(3, 7), (4, 7), (2, 7)],
+        [(5, 0), (4, 0)]
+    ]
 
     for ship in player_ships:
         for coords in ship:
             board[coords[0]][coords[1]] = "X"
 
     return player_ships
+
+
+def get_avaliable_fields(board_size, free_fields, ship):
+    avaliable_fields = set()
+    for (row, col) in ship:
+        if (row > 0 and (row-1, col) in free_fields and (row-1, col) not in ship):
+            avaliable_fields.add((row-1, col))
+        if (row < board_size-1 and (row+1, col) in free_fields and (row+1, col) not in ship):
+            avaliable_fields.add((row+1, col))
+        if (col > 0 and (row, col+1) in free_fields and (row, col+1) not in ship):
+            avaliable_fields.add((row, col+1))
+        if (col < board_size-1 and (row, col-1) in free_fields and (row, col-1) not in ship):
+            avaliable_fields.add((row, col-1))
+    return list(avaliable_fields)
+
+
+def place_the_ships_automatically(board, ship_sizes=[5, 4, 4, 3, 2]):
+    ships = []
+    free_fields = [(row, col) for row in range(len(board)) for col in range(len(board))]
+
+    i = 0
+    while i < len(ship_sizes):
+        size = ship_sizes[i]
+        ship = []
+
+        ship.append(free_fields[randint(0, len(free_fields)-1)])
+
+        is_placement_possible = True
+        for j in range(size-1):
+            avaliable_fields = get_avaliable_fields(len(board), free_fields, ship)
+            if len(avaliable_fields) > 0:
+                ship.append(avaliable_fields[randint(0, len(avaliable_fields)-1)])
+            else:
+                is_placement_possible = False
+                break
+
+        if is_placement_possible:
+            ships.append(ship)
+            for coords in ship:
+                free_fields.remove(coords)
+            for coords in get_avaliable_fields(len(board), free_fields, ship):
+                free_fields.remove(coords)
+            i += 1
+
+    for x in ships:
+        for coords in x:
+            board[coords[0]][coords[1]] = "X"
+
+    return ships
 
 
 def draw_board(board, side):
@@ -136,11 +187,9 @@ def draw_board(board, side):
 
 
 def get_coords(move):
-    print(move)
-
-    x = int((move[0] - 731) / 65)
-    y = int((move[1] - 56) / 65)
-    return (x, y)
+    row = (move[1] - 56) // 65
+    col = (move[0] - 731) // 65
+    return (row, col)
 
 
 def is_valid_move(board, coords):
@@ -151,20 +200,37 @@ def is_valid_move(board, coords):
         return False
 
 
-def mark(board, player_ships, coords):
+def is_collision_free_move(board, coords):
+    if not is_valid_move(board, coords):
+        return False
+
+    row, col = coords
+    if row > 0 and board[row-1][col] == "S":
+        return False
+    if row < len(board)-1 and board[row+1][col] == "S":
+        return False
+    if col > 0 and board[row][col-1] == "S":
+        return False
+    if col < len(board)-1 and board[row][col+1] == "S":
+        return False
+
+    return True
+
+
+def mark(board, player_ships, coords, side="R"):
     row, col = coords
 
     if board[row][col] == "0":
         board[row][col] = "M"
-        draw_ship(coords, "M", "R")
+        draw_ship(coords, "M", side)
     elif board[row][col] == "X":
         if is_ship_sunken(board, player_ships, coords):
             ship = sink(board, player_ships, coords)
             for coords in ship:
-                draw_ship(coords, "S", "R")
+                draw_ship(coords, "S", side)
         else:
             board[row][col] = "H"
-            draw_ship(coords, "H", "R")
+            draw_ship(coords, "H", side)
 
 
 def is_all_sunken(board):
@@ -239,9 +305,8 @@ def human_human_mode(boards, board_size):
             valid_move = False
             while not valid_move:
                 move = get_move()
-                coords = get_coords(move)
-                if is_valid_move(boards[opponent-1], coords):
-                    mark(boards[opponent-1], ships[opponent-1], coords)
+                if is_valid_move(boards[opponent-1], move):
+                    mark(boards[opponent-1], ships[opponent-1], move)
                     valid_move = True
 
             if is_all_sunken(boards[opponent-1]):
@@ -255,6 +320,95 @@ def human_human_mode(boards, board_size):
                 end_time = pygame.time.get_ticks() + 2000
 
                 # TODO: Display player change window
+
+    pygame.quit()
+
+
+def get_targets(board):
+    hit_fields = []
+    for row in range(len(board)):
+        for col in range(len(board)):
+            if board[row][col] == "H":
+                hit_fields.append((row, col))
+
+    targets = []
+    for (row, col) in hit_fields:
+        if (is_collision_free_move(board, (row-1, col)) and row > 0):
+            targets.append((row-1, col))
+        if (is_collision_free_move(board, (row+1, col)) and row < len(board)-1):
+            targets.append((row+1, col))
+        if (is_collision_free_move(board, (row, col-1)) and col > 0):
+            targets.append((row, col-1))
+        if (is_collision_free_move(board, (row, col+1)) and col < len(board)-1):
+            targets.append((row, col+1))
+    return targets
+
+
+def get_avaliable_moves(board):
+    avaliable_moves = []
+    for row in range(len(board)):
+        for col in range(len(board)):
+            if is_collision_free_move(board, (row, col)):
+                avaliable_moves.append((row, col))
+    return avaliable_moves
+
+
+def get_computer_move(board):
+    # Hunt/Target algorithm
+    targets = get_targets(board)
+    if targets:
+        return targets[randint(0, len(targets)-1)]
+    else:
+        avaliable_moves = get_avaliable_moves(board)
+        return avaliable_moves[randint(0, len(avaliable_moves)-1)]
+
+
+def human_computer_mode(boards, board_size):
+    ships = [None, None]
+    player = 1
+    computer = 2
+    run = True
+    clock = pygame.time.Clock()
+    current_time, end_time = 0, 0
+
+    ships[player-1] = place_the_ships(boards[player-1])
+    ships[computer-1] = place_the_ships_automatically(boards[computer-1])
+
+    redraw_screen(boards, board_size, player)
+
+    while run:
+        clock.tick(FPS)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+        if (player != computer):
+            valid_move = False
+            while not valid_move:
+                move = get_move()
+                if is_valid_move(boards[1], move):
+                    mark(boards[1], ships[1], move, "R")
+                    valid_move = True
+        else:
+            current_time = pygame.time.get_ticks()
+            end_time = pygame.time.get_ticks() + 2000
+            while current_time < end_time:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        run = False
+                current_time = pygame.time.get_ticks()
+            move = get_computer_move(boards[0])
+            mark(boards[0], ships[0], move, "L")
+
+        if is_all_sunken(boards[computer-1]):
+            # TODO: Display information that the player wins (GUI)
+            # TODO: Add restart game to menu, exit on ESC key
+            pass
+        else:
+            player = 2 if player == 1 else 1
+
+            # TODO: Display player change window
 
     pygame.quit()
 
@@ -279,10 +433,12 @@ def battleship_game(mode="HUMAN-HUMAN", board_size=10):
 
     if mode == "HUMAN-HUMAN":
         human_human_mode(boards, board_size)
+    elif mode == "HUMAN-COMPUTER":
+        human_computer_mode(boards, board_size)
 
 
 def main():
-    battleship_game()
+    battleship_game("HUMAN-COMPUTER")
 
 
 if __name__ == '__main__':
