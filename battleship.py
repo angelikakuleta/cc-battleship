@@ -36,6 +36,9 @@ def main_menu():
     menu.add_selector("Mode:", [("Human vs Human", 1), ("Human vs AI", 2)], onchange=set_mode)
     menu.add_button("Start", battleship_game)
     menu.add_button("Quit", pygame_menu.events.EXIT)
+    menu.add_text_input("TIPS:", font_size = 25, font_color = (0,0,0), copy_paste_enable = False)
+    menu.add_text_input("You can quit game while it's running by pressing an ESC key", font_size = 20, font_color = (0,0,0))
+    menu.add_text_input("Pressing a 'S' key anytime bring You back to the menu!", font_size = 20, font_color = (0,0,0))
     menu.mainloop(screen)
 
 
@@ -118,6 +121,12 @@ def get_move(side="R"):
                     return get_coords(pos, side)
                 elif side == "R" and pos[0] >= 481 and pos[0] < 881 and pos[1] >= 41 and pos[1] < 441:
                     return get_coords(pos, side)
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                elif event.key == pygame.K_s:
+                    main_menu()
+                    return
 
 
 def draw_ship(coords, sign, side):
@@ -330,7 +339,6 @@ def is_all_sunken(board):
             return False
     return True
 
-
 def is_ship_sunken(board, player_ships, coords):
     for ship in player_ships:
         if coords in ship:
@@ -402,13 +410,18 @@ def human_human_mode(boards, board_size):
                     mark(boards[opponent-1], ships[opponent-1], move)
                     valid_move = True
 
-            if is_all_sunken(boards[opponent-1]):
-                # TODO: Display information that the player wins (GUI)
-                # TODO: Add restart game to menu, exit on ESC key
-                pass
+            if is_all_sunken(boards[opponent-1]) == True:
+                screen.fill(COLORS["BGR"])
+                pygame.display.update()
+                font = pygame.font.SysFont("Arial", 50)
+                text = font.render("Player Wins! Back to menu press 's'", True, (0, 0, 0), COLORS["BGR"])
+                screen.blit(text, (460,  250))
+                pygame.display.flip()
+
             else:
                 player = opponent
                 opponent = 2 if player == 1 else 1
+
                 current_time = pygame.time.get_ticks()
                 end_time = pygame.time.get_ticks() + 2000
 
@@ -503,10 +516,13 @@ def human_computer_mode(boards, board_size):
             move = get_computer_move(boards[0])
             mark(boards[0], ships[0], move, "L")
 
-        if is_all_sunken(boards[computer-1]):
-            # TODO: Display information that the player wins (GUI)
-            # TODO: Add restart game to menu, exit on ESC key
-            pass
+        if is_all_sunken(boards[computer-1]) == True:
+            screen.fill(COLORS["BGR"])
+            pygame.display.update()
+            font = pygame.font.SysFont("Arial", 50)
+            text = font.render("Player Wins! Back to menu press 's'", True, (0, 0, 0), COLORS["BGR"])
+            screen.blit(text, (460,  250))
+            pygame.display.flip()
         else:
             player = 2 if player == 1 else 1
 
