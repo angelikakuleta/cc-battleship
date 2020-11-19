@@ -53,8 +53,10 @@ def player_one_box(screen, board_size):
 
     pygame.draw.line(screen, (0, 0, 0), (side_length, side_length), (side_length, side_length * rows + 2), 3)
     pygame.draw.line(screen, (0, 0, 0), (side_length, side_length), (side_length * rows + 2, side_length), 3)
-    pygame.draw.line(screen, (0, 0, 0), (side_length, side_length * rows + 2), (side_length * rows + 2, side_length * rows + 2), 3)
-    pygame.draw.line(screen, (0, 0, 0), (side_length * rows + 2, side_length), (side_length * rows + 2, side_length * rows + 2), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length, side_length * rows + 2),
+                     (side_length * rows + 2, side_length * rows + 2), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length * rows + 2, side_length),
+                     (side_length * rows + 2, side_length * rows + 2), 3)
 
     draw_numbers(60, screen)
     draw_string(50, screen)
@@ -75,8 +77,10 @@ def player_two_box(screen, board_size):
 
     pygame.draw.line(screen, (0, 0, 0), (side_length * 12, side_length), (side_length * 12, side_length * 11 + 2), 3)
     pygame.draw.line(screen, (0, 0, 0), (side_length * 12, side_length), (side_length * 22 + 2, side_length), 3)
-    pygame.draw.line(screen, (0, 0, 0), (side_length * 12, side_length * 11 + 2), (side_length * 22 + 2, side_length * 11 + 2), 3)
-    pygame.draw.line(screen, (0, 0, 0), (side_length * 22 + 2, side_length), (side_length * 22 + 2, side_length * 11 + 2), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length * 12, side_length * 11 + 2),
+                     (side_length * 22 + 2, side_length * 11 + 2), 3)
+    pygame.draw.line(screen, (0, 0, 0), (side_length * 22 + 2, side_length),
+                     (side_length * 22 + 2, side_length * 11 + 2), 3)
 
     draw_numbers(side_length * 12.5, screen)
     pygame.display.update()
@@ -98,7 +102,7 @@ def draw_string(pos, screen):
         pos += 40
 
 
-def get_move():
+def get_move(side="R"):
     run = True
     clock = pygame.time.Clock()
 
@@ -110,8 +114,10 @@ def get_move():
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
-                if pos[0] >= 481 and pos[0] < 881 and pos[1] >= 41 and pos[1] < 441:
-                    return get_coords(pos)
+                if side == "L" and pos[0] >= 41 and pos[0] < 481 and pos[1] >= 41 and pos[1] < 441:
+                    return get_coords(pos, side)
+                elif side == "R" and pos[0] >= 481 and pos[0] < 881 and pos[1] >= 41 and pos[1] < 441:
+                    return get_coords(pos, side)
 
 
 def draw_ship(coords, sign, side):
@@ -126,6 +132,8 @@ def draw_ship(coords, sign, side):
         color = COLORS["HIT"]
     elif sign == "S":
         color = COLORS["SINK"]
+    elif sign == "":
+        color = COLORS["BGR"]
 
     if not (side == "R" and sign == "X"):
         field_x = board_x + gap * coords[1]
@@ -134,19 +142,77 @@ def draw_ship(coords, sign, side):
         pygame.display.update()
 
 
-def place_the_ships(board):
-    # TODO: Ask player about ship positioning with validation
-    player_ships = [
-        [(3, 2), (4, 2), (4, 3), (5, 2), (6, 2)],
-        [(6, 8), (6, 7), (7, 8), (6, 9)],
-        [(9, 2), (9, 1), (9, 0), (9, 3)],
-        [(3, 7), (4, 7), (2, 7)],
-        [(5, 0), (4, 0)]
-    ]
+def wait(ms):
+    clock = pygame.time.Clock()
+    current_time = pygame.time.get_ticks()
+    end_time = pygame.time.get_ticks() + ms
+    while current_time < end_time:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+        current_time = pygame.time.get_ticks()
+
+
+def place_the_ships(board, player=0, ship_sizes=[5, 4, 4, 3, 2]):
+    player_ships = []
+    free_fields = [(row, col) for row in range(len(board)) for col in range(len(board))]
+    side = "L" if player == 0 else "R"
+
+    screen.fill(COLORS["BGR"])
+    player_one_box(screen, len(board))
+
+    player_text = "One" if player == 0 else "Two"
+    font = pygame.font.SysFont("Arial", 50)
+    text = font.render(f"Player {player_text}", 5, (0, 0, 0))
+    screen.blit(text, (240-text.get_width() / 2, 440))
+
+    pygame.display.update()
+
+    i = 0
+    while i < len(ship_sizes):
+        size = ship_sizes[i]
+        ship = []
+
+        font = pygame.font.SysFont("Arial", 30)
+        text = font.render(f"Put a {size}-masted ship", True, (0, 0, 0), COLORS["BGR"])
+        screen.blit(text, (680-text.get_width() / 2,  HEIGHT/2 - text.get_height()/2))
+        pygame.display.update()
+
+        is_placement_possible = True
+        for j in range(size):
+            coords = get_move(side)
+            if len(ship) > 0:
+                if coords in get_avaliable_fields(len(board), free_fields, ship):
+                    ship.append(coords)
+                    draw_ship(coords, "X", side)
+                else:
+                    is_placement_possible = False
+                    break
+            elif coords in free_fields:
+                ship.append(coords)
+                draw_ship(coords, "X", side)
+            else:
+                is_placement_possible = False
+                break
+
+        if is_placement_possible:
+            player_ships.append(ship)
+            for coords in ship:
+                free_fields.remove(coords)
+            for coords in get_avaliable_fields(len(board), free_fields, ship):
+                free_fields.remove(coords)
+            i += 1
+        else:
+            for coords in ship:
+                draw_ship(coords, "", side)
 
     for ship in player_ships:
         for coords in ship:
             board[coords[0]][coords[1]] = "X"
+
+    wait(2000)
 
     return player_ships
 
@@ -158,10 +224,10 @@ def get_avaliable_fields(board_size, free_fields, ship):
             avaliable_fields.add((row-1, col))
         if (row < board_size-1 and (row+1, col) in free_fields and (row+1, col) not in ship):
             avaliable_fields.add((row+1, col))
-        if (col > 0 and (row, col+1) in free_fields and (row, col+1) not in ship):
-            avaliable_fields.add((row, col+1))
-        if (col < board_size-1 and (row, col-1) in free_fields and (row, col-1) not in ship):
+        if (col > 0 and (row, col-1) in free_fields and (row, col-1) not in ship):
             avaliable_fields.add((row, col-1))
+        if (col < board_size-1 and (row, col+1) in free_fields and (row, col+1) not in ship):
+            avaliable_fields.add((row, col+1))
     return list(avaliable_fields)
 
 
@@ -207,9 +273,12 @@ def draw_board(board, side):
                 draw_ship((row, col), board[row][col], side)
 
 
-def get_coords(move):
+def get_coords(move, side="R"):
     row = (move[1] - 41) // 40
-    col = (move[0] - 481) // 40
+    if side == "L":
+        col = (move[0] - 41) // 40
+    else:
+        col = (move[0] - 481) // 40
     return (row, col)
 
 
