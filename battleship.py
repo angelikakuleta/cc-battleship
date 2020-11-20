@@ -15,8 +15,8 @@ COLORS = {
 
 pygame.init()
 pygame.font.init()
-pygame.display.set_caption("Cool Battleships")
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Cool Battleships")
 screen.fill(COLORS["BGR"])
 FPS = 30
 game_mode = "HUMAN-HUMAN"
@@ -123,7 +123,7 @@ def get_move(side="R"):
                     return get_coords(pos, side)
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    pygame.quit()
+                    sys.exit()
                 elif event.key == pygame.K_s:
                     main_menu()
                     return
