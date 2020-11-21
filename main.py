@@ -9,6 +9,7 @@ screen = sett.screen
 clock = pygame.time.Clock()
 
 main_menu = None
+panel = None
 
 initialized = False
 game_on = False
@@ -35,6 +36,7 @@ def change_view():
 
     game_on = True
     main_menu.disable()
+    panel.disable()
 
     if game_state == "initialization":
         draw.draw_initialization_state(players[player], boards[player])
@@ -64,8 +66,27 @@ def get_menu():
     return menu
 
 
+def get_panel():
+    theme = pygame_menu.themes.THEME_DARK
+
+    menu = pygame_menu.Menu(
+        sett.MENU_HIGHT,
+        sett.MENU_WIDTH,
+        "Information",
+        theme=theme,
+        onclose=change_view
+    )
+
+    menu.add_button("Continue", change_view)
+    menu.add_button("Quit", pygame_menu.events.EXIT)
+    menu.add_label("")
+    menu.add_label("Time to change players...", font_size=20, font_color=sett.COLORS["TEXT_MENU"])
+
+    return menu
+
+
 def init(events):
-    global initialized, players, game_state, player
+    global initialized, players, game_state, player, panel
     game_state = "initialization"
 
     print(f"{game_mode} mode running")
@@ -91,6 +112,8 @@ def init(events):
     player = 1
 
     if game_mode == "HUMAN-HUMAN":
+        panel.enable()
+        panel.mainloop(screen, bgfun=lambda: screen.fill(sett.COLORS["BGR_MENU"]))
         ships[1] = place_ships(boards[1], players[1]["name"], is_left=players[1]["is_left"])
         wait(1000)
     else:
@@ -221,6 +244,8 @@ def play():
             player = int(not player)
             if game_mode == "HUMAN-HUMAN":
                 wait(1000)
+                panel.enable()
+                panel.mainloop(screen, bgfun=lambda: screen.fill(sett.COLORS["BGR_MENU"]))
 
 
 def get_action():
@@ -259,9 +284,10 @@ def wait(ms):
 
 
 def main():
-    global main_menu, initialized, game_on
+    global main_menu, panel, initialized, game_on
 
     main_menu = get_menu()
+    panel = get_panel()
 
     # Main loop
     while True:
