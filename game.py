@@ -121,13 +121,13 @@ def get_targets(board):
 
     targets = []
     for (row, col) in hit_fields:
-        if (is_collision_free_move(board, (row-1, col)) and row > 0):
+        if row > 0 and is_collision_free_move(board, (row-1, col)):
             targets.append((row-1, col))
-        if (is_collision_free_move(board, (row+1, col)) and row < len(board)-1):
+        if row < len(board)-1 and is_collision_free_move(board, (row+1, col)):
             targets.append((row+1, col))
-        if (is_collision_free_move(board, (row, col-1)) and col > 0):
+        if col > 0 and is_collision_free_move(board, (row, col-1)):
             targets.append((row, col-1))
-        if (is_collision_free_move(board, (row, col+1)) and col < len(board)-1):
+        if col < len(board)-1 and is_collision_free_move(board, (row, col+1)):
             targets.append((row, col+1))
     return targets
 
