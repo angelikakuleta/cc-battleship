@@ -124,11 +124,12 @@ def init(events):
 
 
 def get_move(is_left):
-    coords = None
-    while not coords:
+    action = None
+    while not action or "coords" not in action:
         clock.tick(60 if game_on is False else 15)
-        coords = get_action()
+        action = get_action()
 
+    coords = action["coords"]
     x_start = sett.BOARDS_X[0] + 1 if is_left else sett.BOARDS_X[1]+1
     x_end = x_start + sett.BOARD_SIZE * sett.SIDE_LENGTH
     y_start = sett.BOARDS_Y[0] + 1 if is_left else sett.BOARDS_Y[1]+1
@@ -140,7 +141,7 @@ def get_move(is_left):
         return (row, col)
 
 
-def place_ships(board, player_name, is_left, ship_sizes=[5, 4, 4, 3, 2]):
+def place_ships(board, player_name, is_left, ship_sizes=sett.SHIP_SIZES):
     player_ships = []
     free_fields = [(row, col) for row in range(len(board)) for col in range(len(board))]
 
@@ -195,7 +196,7 @@ def place_ships(board, player_name, is_left, ship_sizes=[5, 4, 4, 3, 2]):
 
 
 def play():
-    global player, game_state
+    global player, game_state, game_on, initialized
 
     game_state = "game"
     run = True
@@ -231,15 +232,20 @@ def play():
             pygame.display.update()
 
         if game.is_all_sunken(boards[not player]):
+            wait(1000)
             run = False
             game_state = None
-            screen.fill(sett.COLORS["BGR"])
-            pygame.display.update()
-            font = pygame.font.SysFont("Arial", 50)
+            game_on = False
+            initialized = False
+
             player_name = players[player]["name"]
-            text = font.render(f"{player_name} wins! Back to menu press \"S\"", True, sett.COLORS["TEXT_MENU"], sett.COLORS["BGR"])
-            screen.blit(text, (460,  250))
-            pygame.display.flip()
+            draw.draw_winner_info(player_name)
+            pygame.display.update()
+
+            action = None
+            while not action or "menu" not in action:
+                clock.tick(60 if game_on is False else 15)
+                action = get_action()
         else:
             player = int(not player)
             if game_mode == "HUMAN-HUMAN":
@@ -249,7 +255,7 @@ def play():
 
 
 def get_action():
-    global initalized, main_menu, game_on
+    global main_menu, game_on
     events = pygame.event.get()
 
     for e in events:
@@ -263,9 +269,11 @@ def get_action():
             if e.key == pygame.K_s:
                 main_menu.enable()
                 game_on = False
+                if not initialized:
+                    return {"menu": True}
         elif e.type == pygame.MOUSEBUTTONDOWN:
-            pos = pygame.mouse.get_pos()
-            return pos
+            coords = pygame.mouse.get_pos()
+            return {"coords": coords}
 
     if game_on is False:
         main_menu.mainloop(screen, bgfun=lambda: screen.fill(sett.COLORS["BGR_MENU"]))
@@ -295,7 +303,7 @@ def main():
 
         events = pygame.event.get()
         for event in events:
-            if event.type == draw.pygame.QUIT:
+            if event.type == pygame.QUIT:
                 exit()
 
         if game_on is True:

@@ -96,9 +96,16 @@ def draw_initialization_state(player, board):
 
 
 def draw_initialization_info(size, is_left):
-    font = pygame.font.SysFont("Arial", int(sett.SIDE_LENGTH / 2))
+    font = pygame.font.SysFont("Arial", 30)
     text = font.render(f"Put a {size}-masted ship", True, sett.COLORS["TEXT_MENU"], sett.COLORS["BGR"])
     index = 1 if is_left else 0
     x = sett.BOARDS_X[index] + (sett.BOARD_SIZE*sett.SIDE_LENGTH / 2)
     y = sett.BOARDS_Y[index] + (sett.BOARD_SIZE*sett.SIDE_LENGTH / 2)
     screen.blit(text, (x-text.get_width() / 2,  y - text.get_height()/2))
+
+
+def draw_winner_info(name):
+    screen.fill(sett.COLORS["BGR"])
+    font = pygame.font.SysFont("Arial", 30)
+    text = font.render(f"{name} wins! Back to menu press \"S\"", True, sett.COLORS["TEXT_MENU"], sett.COLORS["BGR"])
+    screen.blit(text, (sett.WIDTH/2 - text.get_width()/2,  sett.HEIGHT/2 - text.get_height()/2))

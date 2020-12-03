@@ -1,5 +1,6 @@
 from random import randint
 import draw
+from settings import SHIP_SIZES
 
 
 def init_board(size):
@@ -26,7 +27,7 @@ def get_avaliable_fields(board_size, free_fields, ship):
     return list(avaliable_fields)
 
 
-def place_ships_automatically(board, ship_sizes=[5, 4, 4, 3, 2]):
+def place_ships_automatically(board, ship_sizes=SHIP_SIZES):
     ships = []
     free_fields = [(row, col) for row in range(len(board)) for col in range(len(board))]
 
